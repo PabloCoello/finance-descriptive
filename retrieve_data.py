@@ -35,5 +35,6 @@ data = yf.download(  # or pdr.get_data_yahoo(...
         proxy = None
     )
 
+data.xs('Open', axis=1, level=1).corr()
 data.xs('Open', axis=1, level=1).plot()
 data.head()
