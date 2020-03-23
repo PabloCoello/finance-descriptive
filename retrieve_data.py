@@ -4,6 +4,7 @@ import pandas as pd
 
 class retrieveData():
     def __init__(self, tickers, period, interval):
+        ticks = tickers.split(' ')
         self.data = yf.download(  # or pdr.get_data_yahoo(...
                 # tickers list or string as well
                 tickers = tickers,
@@ -38,26 +39,52 @@ class retrieveData():
                 # (optional, default is None)
                 proxy = None
             )
-        self.data = self.calculate_yield(col=('AMS.MC',   'Open'))
+        self.data = self.get_df_variable(tickers=ticks, 
+                                         function=self.calculate_yield)
+        self.data = self.get_df_variable(tickers=ticks, 
+                                         function=self.calculate_volatility)
     
     def calculate_yield(self, col):
         new_col = (col[0], col[1] + ' yield')
         yields = []
         for i in range(len(self.data.index)):
             if i == 0:
-                yields.append('NA')
+                yields.append(None)
             else:
-                yields.append((self.data[col][i]-
-                            self.data[col][i-1])/
-                            self.data[col][i-1])
+                yields.append(float((self.data[col][i]-
+                               self.data[col][i-1])/
+                               self.data[col][i-1]))
         self.data[new_col] = yields
+        return(self.data)
+    
+    def calculate_volatility(self, col):
+        new_col = (col[0], col[1] + ' volatility')
+        volat = []
+        for i in range(len(self.data.index)):
+            if i == 0:
+                volat.append(None)
+            else:
+                volat.append(float(((self.data[col][i]-
+                               self.data[col][i-1])/
+                               self.data[col][i-1])**2))
+        self.data[new_col] = volat
+        return(self.data)
+    
+    def get_df_variable(self, tickers, function):
+        features = ['Open', 'High', 'Low', 'Close']
+        for tick in tickers:
+            index = [(tick, feat) for feat in features]
+            for col in index:
+                self.data = function(col=col) 
         return(self.data)
 
 r = retrieveData(tickers="MEL.MC AMS.MC AENA.MC",
                  period="1y",
                  interval="1d")
-r.yields
+df = r.data
 
-data.xs('Open', axis=1, level=1).corr()
-data.xs('Open', axis=1, level=1).plot()
+
+df.xs('Close', axis=1, level=1).corr()
+df.xs('Close yield', axis=1, level=1).plot(figsize=(12,5))
 data.head()
+tickers.split(' ')
