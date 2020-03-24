@@ -85,11 +85,17 @@ class plotisPlot():
 
 class simulateInvestments(retrieveData):
     def __init__(self, cartera, weights, since, to, investment):
-        delta = date.today() - datetime.strptime(since, '%Y-%m-%d')
-        data = retrieveData.__init__(tickers=cartera, 
-                                     period=self.get_retrieve_period(since),
-                                     interval='1d')
+        retrieveData.__init__(self,
+                              tickers=cartera, 
+                              period=str(self.get_retrieve_period(since))+'y',
+                              interval='1d')
         ticks = cartera.split(' ')
+        self.report = self.get_report(ticks=ticks,
+                                                  weights=weights,
+                                                  investment=investment,
+                                                  data=self.data,
+                                                  since=since,
+                                                  to=to)
     
     def get_retrieve_period(self, since):
         dia = since.split('-')
@@ -100,20 +106,35 @@ class simulateInvestments(retrieveData):
         toret = (delta.days//365) + 1
         return(toret)
     
-    def get_actual_value(self, ticks, weights, investment, data, since, to):
+    def get_report(self, ticks, weights, investment, data, since, to):
         returns = {}
         for i in range(len(ticks)):
             col = (ticks[i], 'Close')
             since_price = data[col][since]
             to_price = data[col][to]
-            invest = investment/weights[i]
+            invest = investment*weights[i]
             returns[ticks[i]] = (invest/since_price)*to_price
+        returns['total'] = sum(returns.values())
+        returns['profit'] = returns['total'] - investment
+        returns['initial investment'] = investment
+        returns['weights'] = weights
+        returns['init'] = since
+        returns['fin'] = to
         return(returns)
 
+if __name__ == '__main__':
+    res = simulateInvestments(cartera="MEL.MC AMS.MC AENA.MC",
+                            weights=[0.2,0.4,0.4],
+                            since = '2020-03-20',
+                            to = str(date.today()),
+                            investment=10000)
+    res.report
 
-r = retrieveData(tickers="MEL.MC AMS.MC AENA.MC",
-                 period="1y",
-                 interval="1d")
-df = r.data
-plt = plotisPlot()
-plt.get_xs_plot(df, 'Close yield')
+    '''
+    r = retrieveData(tickers="MEL.MC AMS.MC AENA.MC",
+                    period="1y",
+                    interval="1d")
+    df = r.data
+    plt = plotisPlot()
+    plt.get_xs_plot(df, 'Close yield')
+    '''
