@@ -1,6 +1,7 @@
 import yfinance as yf
 from collections import defaultdict
 import pandas as pd
+from datetime import date, datetime
 
 class retrieveData():
     def __init__(self, tickers, period, interval):
@@ -81,6 +82,33 @@ class retrieveData():
 class plotisPlot():
     def get_xs_plot(self, df, var):
         df.xs(var, axis=1, level=1).plot(figsize=(12,5))
+
+class simulateInvestments(retrieveData):
+    def __init__(self, cartera, weights, since, to, investment):
+        delta = date.today() - datetime.strptime(since, '%Y-%m-%d')
+        data = retrieveData.__init__(tickers=cartera, 
+                                     period=self.get_retrieve_period(since),
+                                     interval='1d')
+        ticks = cartera.split(' ')
+    
+    def get_retrieve_period(self, since):
+        dia = since.split('-')
+        since = date(int(dia[0]),
+                     int(dia[1]),
+                     int(dia[2]))
+        delta = date.today() - since
+        toret = (delta.days//365) + 1
+        return(toret)
+    
+    def get_actual_value(self, ticks, weights, investment, data, since, to):
+        returns = {}
+        for i in range(len(ticks)):
+            col = (ticks[i], 'Close')
+            since_price = data[col][since]
+            to_price = data[col][to]
+            invest = investment/weights[i]
+            returns[ticks[i]] = (invest/since_price)*to_price
+        return(returns)
 
 
 r = retrieveData(tickers="MEL.MC AMS.MC AENA.MC",
