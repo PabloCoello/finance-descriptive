@@ -128,13 +128,8 @@ if __name__ == '__main__':
                             since = '2020-03-20',
                             to = str(date.today()),
                             investment=10000)
-    res.report
-
-    '''
-    r = retrieveData(tickers="MEL.MC AMS.MC AENA.MC",
-                    period="1y",
-                    interval="1d")
-    df = r.data
     plt = plotisPlot()
-    plt.get_xs_plot(df, 'Close yield')
-    '''
+    res.report
+    plt.get_xs_plot(res.data, 'Close')
+    plt.get_xs_plot(res.data, 'Close yield')
+    plt.get_xs_plot(res.data, 'Close volatility')
