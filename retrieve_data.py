@@ -78,6 +78,11 @@ class retrieveData():
                 self.data = function(col=col) 
         return(self.data)
 
+class plotisPlot():
+    def __init__(self, df):
+        self.close_yieldplot = df.xs('Close yield', axis=1, level=1).plot(figsize=(12,5))
+        self.close_volatilityplot = df.xs('Close volatility', axis=1, level=1).plot(figsize=(12,5))
+
 r = retrieveData(tickers="MEL.MC AMS.MC AENA.MC",
                  period="1y",
                  interval="1d")
