@@ -4,6 +4,9 @@ import pandas as pd
 from datetime import date, datetime
 
 class retrieveData():
+    '''
+    Class to return a df with finantial data using yahoo finance API.
+    '''
     def __init__(self, tickers, period, interval):
         ticks = tickers.split(' ')
         self.data = yf.download(  # or pdr.get_data_yahoo(...
@@ -46,6 +49,10 @@ class retrieveData():
                                          function=self.calculate_volatility)
     
     def calculate_yield(self, col):
+        '''
+        Calculate de yield of a given price col as (pt-p(t-1))/p(t-1)
+            -col: str. Name of the column to calculate.
+        '''
         new_col = (col[0], col[1] + ' yield')
         yields = []
         for i in range(len(self.data.index)):
@@ -59,6 +66,10 @@ class retrieveData():
         return(self.data)
     
     def calculate_volatility(self, col):
+        '''
+        Calculate the volatility of a given price col as ((pt-p(t-1))/p(t-1))^2
+            -col: str. Name of the column to calculate.
+        '''
         new_col = (col[0], col[1] + ' volatility')
         volat = []
         for i in range(len(self.data.index)):
@@ -72,6 +83,9 @@ class retrieveData():
         return(self.data)
     
     def get_df_variable(self, tickers, function):
+        '''
+        Calculate functions on given tickers.
+        '''
         features = ['Open', 'High', 'Low', 'Close']
         for tick in tickers:
             index = [(tick, feat) for feat in features]
@@ -80,10 +94,23 @@ class retrieveData():
         return(self.data)
 
 class plotisPlot():
+    '''
+    Class for visualization functions.
+    '''
     def get_xs_plot(self, df, var):
+        '''
+        Returns the plot for a given var along the cross section of the data.
+            -df: df. Finnancial data.
+            -var: str. Variable to be ploted 'Close', 'High', 'Low', 'Open', 
+            'Close volatility', 'High volatility', 'Low volatility', 'Open volatility', 
+            'Close yield', 'High yield', 'Low yield', 'Open yield')
+        '''
         df.xs(var, axis=1, level=1).plot(figsize=(12,5))
 
 class simulateInvestments(retrieveData):
+    '''
+    Class for simulating investments.
+    '''
     def __init__(self, cartera, weights, since, to, investment):
         retrieveData.__init__(self,
                               tickers=cartera, 
@@ -98,6 +125,9 @@ class simulateInvestments(retrieveData):
                                                   to=to)
     
     def get_retrieve_period(self, since):
+        '''
+        Returns the period needed to ask for data to yahoo finance API.
+        '''
         dia = since.split('-')
         since = date(int(dia[0]),
                      int(dia[1]),
@@ -107,6 +137,17 @@ class simulateInvestments(retrieveData):
         return(toret)
     
     def get_report(self, ticks, weights, investment, data, since, to):
+        '''
+        Returns a dict with the report of a given investment.
+            -ticks: list of strings. Tickers of the products to invest. 
+            -weights: list of float. Each element of the list represents the 
+                      proportion of the total invest that correspond to each 
+                      ticker.
+            -investment: float. Total invest in money.
+            -data: df. result of retrieveData class.
+            -since: str, 'YYYY-MM-DD'. Day of the buy.
+            -to: str, 'YYYY-MM-DD'. Day of the sell.
+        '''
         returns = {}
         for i in range(len(ticks)):
             col = (ticks[i], 'Close')
