@@ -118,11 +118,11 @@ class simulateInvestments(retrieveData):
                               interval='1d')
         ticks = cartera.split(' ')
         self.report = self.get_report(ticks=ticks,
-                                                  weights=weights,
-                                                  investment=investment,
-                                                  data=self.data,
-                                                  since=since,
-                                                  to=to)
+                                      weights=weights,
+                                      investment=investment,
+                                      data=self.data,
+                                      since=since,
+                                      to=to)
     
     def get_retrieve_period(self, since):
         '''
