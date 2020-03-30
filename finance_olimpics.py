@@ -1,60 +1,52 @@
 import retrieve_data
 from datetime import date, datetime
 from collections import defaultdict
+import pandas as pd
 
+path = '/mnt/c/Users/epiph/OneDrive - Universidade de Santiago de Compostela(1)/Locas olimpiadas financieras'
 wallets = {
-    'eco1':{
-        'cartera':"MEL.MC AMS.MC AENA.MC",
-        'weights':[0.2,0.4,0.4],
-        'since':'2020-03-20',
-        'to':'2020-03-27',
-        'investment':10000
-    },
-    'eco2':{
-        'cartera':"MEL.MC AMS.MC AENA.MC",
-        'weights':[0.2,0.4,0.4],
-        'since':'2020-03-20',
-        'to':'2020-03-27',
-        'investment':10000
-    },
-    'Juan':{
-        'cartera':"MEL.MC AMS.MC AENA.MC",
-        'weights':[0.2,0.4,0.4],
-        'since':'2020-03-20',
-        'to':'2020-03-27',
-        'investment':10000
-    },
-    'Maria_y_Clara':{
-        'cartera':"MEL.MC AMS.MC AENA.MC",
-        'weights':[0.2,0.4,0.4],
-        'since':'2020-03-20',
-        'to':'2020-03-27',
-        'investment':10000
-    },
-    'Ourense':{
-        'cartera':"MEL.MC AMS.MC AENA.MC",
-        'weights':[0.2,0.4,0.4],
-        'since':'2020-03-20',
-        'to':'2020-03-27',
-        'investment':10000
+    'WWS': path+'/WWS/WWS.xlsx'
+    #'eco2': path+'/team2/team2.xlsx',
+    #'Juan': path+'/team3/team3.xlsx',
+    #'Maria_y_Clara': path+'/team4/team4.xlsx',
+    #'Ourense':path+'/team5/team5.xlsx',
     }
-}
-str(date.today())
-def wallet_actualization(wallet):
-    res = retrieve_data.simulateInvestments(cartera=wallet['cartera'],
-                                  weights=wallet['weights'],
-                                  since = wallet['since'],
-                                  to = wallet['to'],
-                                  investment=wallet['investment'])
-    return(res.report)
+
+to =date.today().isoformat()
+
+def wallet_actualization(df, to):
+    cartera = df.columns[df.loc[df.index[-1]]!=0][: len(df.columns) - 5]
+    since = format_date(df.index[-1])
+    weights = []
+    for col in cartera:
+        weights.append(df[col][df.index[-1]]/df['total'][df.index[-1]])
+    cartera_join = ' '.join(cartera)
+    res = retrieve_data.simulateInvestments(cartera=cartera_join,
+                                            weights=weights,
+                                            since = since,
+                                            to = str(to),
+                                            investment=df['total'][df.index[-1]])
+    stocks = []
+    for stock in cartera:
+        stocks.append(res.report[stock])
+    df.loc[to] = stocks+[sum(stocks), 
+                         sum(stocks)-df.loc[since]['total'], 
+                         sum(stocks)-10000,
+                         (sum(stocks)-df.loc[since]['total'])/df.loc[since]['total'],
+                         (sum(stocks)-10000)/10000]
+    return(df)
     
 
-def report_actualization(wallets):
-    toret = defaultdict(list)
+def report_actualization(wallets, to, path):
     for wallet in wallets.keys():
-        res = wallet_actualization(wallets[wallet])
-        toret[wallet]=res
-    return(toret)
+        df = pd.read_excel(wallets[wallet], index_col='date')
+        res = wallet_actualization(df, to)
+        res.to_excel(path+'/'+wallet+'.xlsx')
+    return(res)
 
-result = report_actualization(wallets)
-result.keys()
+def format_date(date):
+    date = str(date)
+    date = date.split(' ')[0]
+    return(date)
+
+result = report_actualization(wallets, to, path)

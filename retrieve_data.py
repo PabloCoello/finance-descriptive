@@ -174,3 +174,7 @@ if __name__ == '__main__':
     plt.get_xs_plot(res.data, 'Close')
     plt.get_xs_plot(res.data, 'Close yield')
     plt.get_xs_plot(res.data, 'Close volatility')
+    
+    cartera
+    weights
+    since
