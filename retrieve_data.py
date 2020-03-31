@@ -111,7 +111,7 @@ class simulateInvestments(retrieveData):
     '''
     Class for simulating investments.
     '''
-    def __init__(self, cartera, weights, since, to, investment):
+    def __init__(self, cartera, weights, since, to, investment, positions):
         retrieveData.__init__(self,
                               tickers=cartera, 
                               period=str(self.get_retrieve_period(since))+'y',
@@ -122,7 +122,8 @@ class simulateInvestments(retrieveData):
                                       investment=investment,
                                       data=self.data,
                                       since=since,
-                                      to=to)
+                                      to=to,
+                                      positions=positions)
     
     def get_retrieve_period(self, since):
         '''
@@ -136,7 +137,7 @@ class simulateInvestments(retrieveData):
         toret = (delta.days//365) + 1
         return(toret)
     
-    def get_report(self, ticks, weights, investment, data, since, to):
+    def get_report(self, ticks, weights, investment, data, since, to, positions):
         '''
         Returns a dict with the report of a given investment.
             -ticks: list of strings. Tickers of the products to invest. 
@@ -154,7 +155,10 @@ class simulateInvestments(retrieveData):
             since_price = data[col][since]
             to_price = data[col][to]
             invest = investment*weights[i]
-            returns[ticks[i]] = (invest/since_price)*to_price
+            if positions[i]:
+                returns[ticks[i]] = (invest/to_price)*since_price
+            else:
+                returns[ticks[i]] = (invest/since_price)*to_price
         returns['total'] = sum(returns.values())
         returns['profit'] = returns['total'] - investment
         returns['initial investment'] = investment
