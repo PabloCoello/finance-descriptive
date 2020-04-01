@@ -35,7 +35,7 @@ wallets = {
     }
     }
 
-to ='2020-03-31'#date.today().isoformat()
+to ='2020-04-01'#date.today().isoformat()
 
 def wallet_actualization(df, to, wallet, historico):
     cartera = df.columns[df.loc[df.index[-1]]!=0][: len(df.columns) - 5]
