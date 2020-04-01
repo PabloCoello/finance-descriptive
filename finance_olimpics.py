@@ -157,14 +157,17 @@ def Insert_row(row_number, df, row_value):
     index_ = upper_half + lower_half 
    
     # Update the index of the dataframe 
-    index_ = [x+1 for x in index_]
     df.index = index_
    
     # Insert a row at the end 
     df.loc[row_number] = row_value 
     
     # Sort the index labels 
-    df = df.sort_index() 
+    df = df.sort_index()
+    Position = [x+1 for x in df.index]
+    df['Position']=Position
+    df.reset_index(drop=True)
+    df.set_index('Position', inplace=True)
    
     # return the dataframe 
     return(df)
