@@ -24,14 +24,18 @@ wallets = {
     'Massive_dynamic': {
         'path': path+'/Massive_dynamic/Massive_dynamic.xlsx',
         'short': ['REP.MC']
-        }
+        },
     #'Andres': {
     #    'path': path+'/Andres/Andres.xlsx',
     #    'short': []
-    #}
+    #},
+    'Goldman_sachs': {
+        'path': path+'/Goldman_sachs/Goldman_sachs.xlsx',
+        'short': []
+    }
     }
 
-to ='2020-03-30'#date.today().isoformat()
+to ='2020-03-31'#date.today().isoformat()
 
 def wallet_actualization(df, to, wallet, historico):
     cartera = df.columns[df.loc[df.index[-1]]!=0][: len(df.columns) - 5]
@@ -83,8 +87,8 @@ def send_results(dict, wallets, df, path):
     for wallet in wallets.keys():
         dict[wallet].to_excel(wallets[wallet]['path'])
         df.to_excel(path+'/'+wallet+'/'+'ranking_general.xlsx')
-        df.to_excel((path+'/backup/ranking'+to+'.xlsx')
-        
+        df.to_excel((path+'/backup/ranking'+to+'.xlsx'))
+                    
 def get_ranking(dict, wallets, to):
     toret = defaultdict(list)
     for wallet in wallets.keys():
@@ -109,13 +113,79 @@ def actualize_historic():
     historico.to_excel(path+'/backup/historico.xlsx')
     return(historico)
 
+def fix_result(df, tick, to, amount):
+    cartera = df.columns[df.loc[df.index[-1]]!=0][: len(df.columns) - 5]
+    since = format_date(df.index[-2])
+    
+    df[tick][to] = amount
+    
+    stocks = []
+    for stock in cartera:
+        stocks.append(df[stock][to])
+        
+    df['total'][to]= sum(stocks)
+    df['1 day profit'][to] = sum(stocks)-df['total'][since]
+    df['general profit'][to] = sum(stocks)-10000
+    df['1 day yield'][to] = (sum(stocks)-df['total'][since])/df['total'][since]
+    df['general yield'][to] = (sum(stocks)-10000)/10000
+    return(df)
+
+def Insert_row(row_number, df, row_value): 
+    row_number = row_number-1
+    # Starting value of upper half 
+    start_upper = 0
+   
+    # End value of upper half 
+    end_upper = row_number 
+   
+    # Start value of lower half 
+    start_lower = row_number 
+   
+    # End value of lower half 
+    end_lower = df.shape[0] 
+   
+    # Create a list of upper_half index 
+    upper_half = [*range(start_upper, end_upper, 1)] 
+   
+    # Create a list of lower_half index 
+    lower_half = [*range(start_lower, end_lower, 1)] 
+   
+    # Increment the value of lower half by 1 
+    lower_half = [x.__add__(1) for x in lower_half] 
+   
+    # Combine the two lists 
+    index_ = upper_half + lower_half 
+   
+    # Update the index of the dataframe 
+    index_ = [x+1 for x in index_]
+    df.index = index_
+   
+    # Insert a row at the end 
+    df.loc[row_number] = row_value 
+    
+    # Sort the index labels 
+    df = df.sort_index() 
+   
+    # return the dataframe 
+    return(df)
+
 
 historico = actualize_historic()
 result = report_actualization(wallets, to, path, historico)
 
+# Add value manually
+result['Goldman_sachs'] = fix_result(df=result['Goldman_sachs'],
+                                     tick='BTC-EUR',
+                                     to=to,
+                                     amount=800)
 
 rank = get_ranking(dict=result, wallets=wallets, to=to)
 rank
+
+# Insert row in rank of needed
+rank = Insert_row(row_number=5,
+                  df=rank,
+                  row_value=['Andres',10000,0,0])
 
 
 send_results(dict=result,
