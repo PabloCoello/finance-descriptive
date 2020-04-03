@@ -25,40 +25,47 @@ wallets = {
         'path': path+'/Massive_dynamic/Massive_dynamic.xlsx',
         'short': ['REP.MC']
         },
-    #'Andres': {
-    #    'path': path+'/Andres/Andres.xlsx',
-    #    'short': []
-    #},
+    'Andres': {
+        'path': path+'/Andres/Andres.xlsx',
+        'short': []
+    },
     'Goldman_sachs': {
         'path': path+'/Goldman_sachs/Goldman_sachs.xlsx',
         'short': []
     }
     }
 
-to ='2020-04-01'#date.today().isoformat()
+to =date.today().isoformat()
 
 def wallet_actualization(df, to, wallet, historico):
-    cartera = df.columns[df.loc[df.index[-1]]!=0][: len(df.columns) - 5]
-    since = format_date(df.index[-1])
+    ind = df.index[-1]
+    if df.index.duplicated(keep='first')[-1]:
+        cols = df.columns[df.loc[ind].iloc[1]]
+        cartera = cols[: len(cols) - 5]
+    else:  
+        cols = df.columns[df.loc[ind]]
+        cartera = cols[: len(cols) - 5]
+    
+    since = format_date(ind)
     weights = []
     positions = []
     for col in cartera:
-        weights.append(df[col][df.index[-1]]/df['total'][df.index[-1]])
+        weights.append(df[col][ind]/df['total'][ind])
         positions.append(col in wallet['short'])
     cartera_join = ' '.join(cartera)
     res = retrieve_data.simulateInvestments(cartera=cartera_join,
                                             weights=weights,
                                             since = since,
                                             to = str(to),
-                                            investment=df['total'][df.index[-1]],
+                                            investment=df['total'][ind],
                                             positions=positions)
     stocks = []
     for i in range(len(cartera)):
         if cartera[i] in historico.columns:
             if positions[i]:
-                stocks.append((df[cartera[i]][df.index[-1]]/historico[cartera[i]][to])*historico[cartera[i]][since])
+                stocks.append((df[cartera[i]][ind]/historico[cartera[i]][to])*historico[cartera[i]][since])
             else:
-                stocks.append((df[cartera[i]][df.index[-1]]/historico[cartera[i]][since])*historico[cartera[i]][to])
+                stocks.append((df[cartera[i]][ind]/historico[cartera[i]][since])*historico[cartera[i]][to])
         else:
             stocks.append(res.report[cartera[i]])
     df.loc[to] = stocks+[sum(stocks), 
@@ -190,8 +197,12 @@ rank = Insert_row(row_number=5,
                   df=rank,
                   row_value=['Andres',10000,0,0])
 
+result
 
 send_results(dict=result,
              wallets=wallets,
              df=rank,
              path=path)
+
+
+df = pd.read_excel(wallets['CAPM_Sampayo']['path'], index_col='date')
