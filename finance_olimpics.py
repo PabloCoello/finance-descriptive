@@ -39,13 +39,8 @@ to =date.today().isoformat()
 
 def wallet_actualization(df, to, wallet, historico):
     ind = df.index[-1]
-    if df.index.duplicated(keep='first')[-1]:
-        cols = df.columns[df.loc[ind].iloc[1]]
-        cartera = cols[: len(cols) - 5]
-    else:  
-        cols = df.columns[df.loc[ind]]
-        cartera = cols[: len(cols) - 5]
-    
+    cartera = df.columns[: len(df.columns) - 5]
+
     since = format_date(ind)
     weights = []
     positions = []
@@ -206,3 +201,4 @@ send_results(dict=result,
 
 
 df = pd.read_excel(wallets['CAPM_Sampayo']['path'], index_col='date')
+df = pd.read_excel('/home/pablo/Escritorio/finance/CAPM_Sampayo.xlsx',index_col='date')
