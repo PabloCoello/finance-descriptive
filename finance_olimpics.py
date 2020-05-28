@@ -19,7 +19,7 @@ wallets = {
         },
     'CAPM_Sampayo': {
         'path': path+'/CAPM_Sampayo/CAPM_Sampayo.xlsx',
-        'short': ['VIS.MC', 'IAG.MC']
+        'short': ['VIS.MC']
         },
     'Massive_dynamic': {
         'path': path+'/Massive_dynamic/Massive_dynamic.xlsx',
@@ -139,13 +139,13 @@ def actualize_historic():
     res= retrieve_data.retrieveData(tickers=hist,
                                period='1y',
                                interval='1d').data 
-    row = [float(res[(stock, 'Close')]) for stock in historico.columns]
+    row = [float(res[(stock, 'Close')][-1]) for stock in historico.columns]
     historico.loc[to] = row
     historico.to_excel(path+'/backup/historico.xlsx')
     return(historico)
 
 def fix_result(df, tick, to, amount):
-    cartera = df.columns[df.loc[df.index[-1]]!=0][: len(df.columns) - 5]
+    cartera = df.columns[: len(df.columns) - 5]
     since = format_date(df.index[-2])
     
     df[tick][to] = amount
@@ -155,9 +155,9 @@ def fix_result(df, tick, to, amount):
         stocks.append(df[stock][to])
         
     df['total'][to]= sum(stocks)
-    df['1 day profit'][to] = sum(stocks)-df['total'][since]
+    df['1 day profit'][to] = sum(stocks)-df['total'][since].iloc[1]
     df['general profit'][to] = sum(stocks)-10000
-    df['1 day yield'][to] = (sum(stocks)-df['total'][since])/df['total'][since]
+    df['1 day yield'][to] = (sum(stocks)-df['total'][since].iloc[1])/df['total'][since].iloc[1]
     df['general yield'][to] = (sum(stocks)-10000)/10000
     return(df)
 
@@ -205,15 +205,22 @@ def Insert_row(row_number, df, row_value):
 
 
 historico = actualize_historic()
+
 result = report_actualization(wallets, to, path, historico)
 
 # Add value manually
-result['Goldman_sachs'] = fix_result(df=result['Goldman_sachs'],
-                                     tick='BTC-EUR',
+result['CAPM_Sampayo'] = fix_result(df=result['CAPM_Sampayo'],
+                                     tick='^IBEX',
                                      to=to,
-                                     amount=1036.0907)
+                                     amount=1041.354224)
 
+result['CAPM_Sampayo']
+result['Goldman_sachs']
+result['Massive_dynamic']
+result['NoName']
+result['Oira']
 result['Andres']
+result['WWS']
 
 rank = get_ranking(dict=result, wallets=wallets, to=to)
 rank
@@ -222,11 +229,9 @@ rank
 rank = Insert_row(row_number=5,
                   df=rank,
                   row_value=['Andres',10000,0,0])
-
 result
 
 send_results(dict=result,
              wallets=wallets,
              df=rank,
              path=path)
-
