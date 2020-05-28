@@ -45,29 +45,58 @@ def wallet_actualization(df, to, wallet, historico):
     weights = []
     positions = []
     for col in cartera:
-        weights.append(df[col][ind]/df['total'][ind])
-        positions.append(col in wallet['short'])
+        if df.index.duplicated(keep='first')[-1]:
+            weights.append(df[col][ind].iloc[1]/df['total'][ind].iloc[1])
+            positions.append(col in wallet['short'])
+        else:
+            weights.append(df[col][ind]/df['total'][ind])
+            positions.append(col in wallet['short'])
+            
     cartera_join = ' '.join(cartera)
-    res = retrieve_data.simulateInvestments(cartera=cartera_join,
-                                            weights=weights,
-                                            since = since,
-                                            to = str(to),
-                                            investment=df['total'][ind],
-                                            positions=positions)
+    
+    if df.index.duplicated(keep='first')[-1]:
+        res = retrieve_data.simulateInvestments(cartera=cartera_join,
+                                                weights=weights,
+                                                since = since,
+                                                to = str(to),
+                                                investment=df['total'][ind].iloc[1],
+                                                positions=positions)
+    else:
+        res = retrieve_data.simulateInvestments(cartera=cartera_join,
+                                                weights=weights,
+                                                since = since,
+                                                to = str(to),
+                                                investment=df['total'][ind],
+                                                positions=positions)
     stocks = []
     for i in range(len(cartera)):
         if cartera[i] in historico.columns:
-            if positions[i]:
-                stocks.append((df[cartera[i]][ind]/historico[cartera[i]][to])*historico[cartera[i]][since])
+            if df.index.duplicated(keep='first')[-1]:
+                if positions[i]:
+                    stocks.append((df[cartera[i]][ind].iloc[1]/historico[cartera[i]][to])*historico[cartera[i]][since])
+                else:
+                    stocks.append((df[cartera[i]][ind].iloc[1]/historico[cartera[i]][since])*historico[cartera[i]][to])
             else:
-                stocks.append((df[cartera[i]][ind]/historico[cartera[i]][since])*historico[cartera[i]][to])
+                if positions[i]:
+                    stocks.append((df[cartera[i]][ind]/historico[cartera[i]][to])*historico[cartera[i]][since])
+                else:
+                    stocks.append((df[cartera[i]][ind]/historico[cartera[i]][since])*historico[cartera[i]][to])
         else:
             stocks.append(res.report[cartera[i]])
-    df.loc[to] = stocks+[sum(stocks), 
+            
+    if df.index.duplicated(keep='first')[-1]:
+        array = stocks+[sum(stocks), 
+                         sum(stocks)-df.loc[since].iloc[1]['total'], 
+                         sum(stocks)-10000,
+                         (sum(stocks)-df.loc[since].iloc[1]['total'])/df.loc[since].iloc[1]['total'],
+                         (sum(stocks)-10000)/10000]
+    else:
+        array = stocks+[sum(stocks), 
                          sum(stocks)-df.loc[since]['total'], 
                          sum(stocks)-10000,
                          (sum(stocks)-df.loc[since]['total'])/df.loc[since]['total'],
                          (sum(stocks)-10000)/10000]
+    df.loc[to] = array
     return(df)
     
 def format_date(date):
@@ -182,7 +211,9 @@ result = report_actualization(wallets, to, path, historico)
 result['Goldman_sachs'] = fix_result(df=result['Goldman_sachs'],
                                      tick='BTC-EUR',
                                      to=to,
-                                     amount=800)
+                                     amount=1036.0907)
+
+result['Andres']
 
 rank = get_ranking(dict=result, wallets=wallets, to=to)
 rank
@@ -199,6 +230,3 @@ send_results(dict=result,
              df=rank,
              path=path)
 
-
-df = pd.read_excel(wallets['CAPM_Sampayo']['path'], index_col='date')
-df = pd.read_excel('/home/pablo/Escritorio/finance/CAPM_Sampayo.xlsx',index_col='date')
